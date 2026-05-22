@@ -104,6 +104,17 @@ function loadNewMob() {
     document.getElementById('mobImage').src = currentMob.image;
     document.getElementById('feedback').textContent = '';
     document.getElementById('feedback').className = 'feedback';
+    // special styling for the custom mob d3rlord3
+    const mobDisplayEl = document.querySelector('.mob-display');
+    if (mobDisplayEl) mobDisplayEl.classList.remove('d3r');
+    if (currentMob.name === 'd3rlord3') {
+        if (mobDisplayEl) mobDisplayEl.classList.add('d3r');
+        const fb = document.getElementById('feedback');
+        if (fb) {
+            fb.textContent = 'Whatever you do at the cross roads dont turn left';
+            fb.className = 'feedback d3r';
+        }
+    }
     document.getElementById('nextButton').style.display = 'none';
     
     generateOptions();
@@ -154,6 +165,13 @@ function guessOption(button) {
         feedback.textContent = '✓ Correct!';
         feedback.className = 'feedback correct';
         button.classList.add('correct');
+        // special win message/effect for d3rlord3
+        if (currentMob.name === 'd3rlord3') {
+            feedback.textContent = '✓ You discovered D3RLORD3!';
+            feedback.className = 'feedback d3r correct';
+            document.body.classList.add('d3r-mode');
+            setTimeout(() => document.body.classList.remove('d3r-mode'), 2600);
+        }
     } else {
         wrongCount++;
         const wcEl = document.getElementById('wrongCount');
@@ -199,4 +217,25 @@ function endGame() {
 }
 
 // Initialize game when page loads
-window.addEventListener('load', initGame);
+function toggleColorBlindMode() {
+    document.body.classList.toggle('colorblind-mode');
+    const enabled = document.body.classList.contains('colorblind-mode');
+    localStorage.setItem('colorblindMode', enabled ? '1' : '0');
+    // update all toggle buttons' labels
+    document.querySelectorAll('#colorToggle').forEach(btn => {
+        btn.textContent = enabled ? 'CB: On' : 'CB Mode';
+    });
+}
+
+function applySavedColorMode() {
+    const enabled = localStorage.getItem('colorblindMode') === '1';
+    if (enabled) document.body.classList.add('colorblind-mode');
+    document.querySelectorAll('#colorToggle').forEach(btn => {
+        btn.textContent = enabled ? 'CB: On' : 'CB Mode';
+    });
+}
+
+window.addEventListener('load', () => {
+    applySavedColorMode();
+    initGame();
+});
