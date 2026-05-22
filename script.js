@@ -47,18 +47,52 @@ const mobs = [
         name: 'skeleton',
         image: 'https://minecraft.wiki/images/Skeleton_face.png'
     }
+    ,
+    {
+        name: 'warden',
+        image: 'https://minecraft.wiki/images/Warden_face.png'
+    },
+    {
+        name: 'villager',
+        image: 'https://minecraft.wiki/images/Villager_face.png'
+    },
+    {
+        name: 'cat',
+        image: 'https://minecraft.wiki/images/Cat_face.png'
+    },
+    {
+        name: 'slime',
+        image: 'https://minecraft.wiki/images/Slime_face.png'
+    },
+    {
+        name: 'ghast',
+        image: 'https://minecraft.wiki/images/Ghast_face.png'
+    },
+    {
+        name: 'fox',
+        image: 'https://minecraft.wiki/images/Fox_face.png'
+    }
+    ,
+    {
+        name: 'd3rlord3',
+        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQBq6_yqw9Fb6r3-dz3DB1fzruESVtepQJPgQ&s'
+    }
 ];
 
 let currentMobIndex = 0;
 let score = 0;
 let questionsAsked = 0;
+let wrongCount = 0;
 let currentMob = null;
 let answered = false;
 
 function initGame() {
     score = 0;
     questionsAsked = 0;
+    wrongCount = 0;
     document.getElementById('score').textContent = '0';
+    const wc = document.getElementById('wrongCount');
+    if (wc) wc.textContent = '0';
     loadNewMob();
 }
 
@@ -121,6 +155,9 @@ function guessOption(button) {
         feedback.className = 'feedback correct';
         button.classList.add('correct');
     } else {
+        wrongCount++;
+        const wcEl = document.getElementById('wrongCount');
+        if (wcEl) wcEl.textContent = wrongCount;
         feedback.textContent = `✗ Wrong! It was a ${currentMob.name}.`;
         feedback.className = 'feedback incorrect';
         button.classList.add('incorrect');
@@ -132,6 +169,13 @@ function guessOption(button) {
             }
             btn.disabled = true;
         });
+        
+        if (wrongCount >= 3) {
+            document.getElementById('nextButton').style.display = 'block';
+            document.getElementById('nextButton').textContent = 'Game Over';
+            document.getElementById('nextButton').onclick = endGame;
+            return;
+        }
     }
     
     document.getElementById('nextButton').style.display = 'block';
@@ -146,8 +190,9 @@ function endGame() {
     gameContainer.innerHTML = `
         <div class="end-game">
             <h2>Game Over!</h2>
-            <p>Your Score: <span class="final-score">${score}/10</span></p>
-            <button class="start-button" onclick="initGame()">Play Again</button>
+            <p>You got <span class="final-score">${wrongCount}</span> questions wrong.</p>
+            <p>Final Score: <span class="final-score">${score}</span></p>
+            <button class="start-button" onclick="initGame()">Try Again</button>
             <button class="start-button" onclick="goHome()">Back to Home</button>
         </div>
     `;

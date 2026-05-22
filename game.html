@@ -4,12 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minecraft Mob Guesser - Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="game-page">
+    <header class="site-header small">
+        <div class="container">
+            <h1 class="site-title">Minecraft Mob Guesser</h1>
+            <button class="back-small" onclick="goHome()">Home</button>
+        </div>
+    </header>
+
+    <main class="game-page">
         <div class="game-container">
-            <div class="score">Score: <span id="score">0</span></div>
+            <div class="score-container">
+                <div class="score">Score: <span id="score">0</span></div>
+                <div class="wrong-count">Wrong: <span id="wrongCount">0</span>/3</div>
+            </div>
             <div class="mob-display">
                 <img id="mobImage" src="" alt="Minecraft Mob">
             </div>
@@ -22,9 +33,8 @@
             </div>
             <div class="feedback" id="feedback"></div>
             <button class="next-button" id="nextButton" onclick="nextMob()" style="display: none;">Next Mob</button>
-            <button class="back-button" onclick="goHome()">Back to Home</button>
         </div>
-    </div>
+    </main>
     <script src="script.js"></script>
 </body>
 </html>
