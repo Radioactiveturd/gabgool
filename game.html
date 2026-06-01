@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-header small">
         <div class="container">
             <h1 class="site-title">Minecraft Mob Guesser</h1>
@@ -18,26 +19,31 @@
         </div>
     </header>
 
-    <main class="game-page">
+    <main id="main" class="game-page">
         <div class="game-container">
             <div class="score-container">
                 <div class="score">Score: <span id="score">0</span></div>
                 <div class="wrong-count">Wrong: <span id="wrongCount">0</span>/3</div>
             </div>
             <div class="mob-display">
-                <img id="mobImage" src="" alt="Minecraft Mob">
+                <img id="mobImage" src="" alt="Minecraft Mob" role="img">
             </div>
             <div class="question">What mob is this?</div>
             <div class="options">
-                <button class="option-button" onclick="guessOption(this)"></button>
-                <button class="option-button" onclick="guessOption(this)"></button>
-                <button class="option-button" onclick="guessOption(this)"></button>
-                <button class="option-button" onclick="guessOption(this)"></button>
+                <button type="button" class="option-button" onclick="guessOption(this)"></button>
+                <button type="button" class="option-button" onclick="guessOption(this)"></button>
+                <button type="button" class="option-button" onclick="guessOption(this)"></button>
+                <button type="button" class="option-button" onclick="guessOption(this)"></button>
             </div>
-            <div class="feedback" id="feedback"></div>
-            <button class="next-button" id="nextButton" onclick="nextMob()" style="display: none;">Next Mob</button>
+            <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+            <button type="button" class="next-button" id="nextButton" onclick="nextMob()" style="display: none;" aria-label="Next mob">Next Mob</button>
         </div>
     </main>
+    <div class="multiplayer-panel">
+        <div id="mpStatus">Multiplayer: not connected</div>
+        <div id="playersList" class="players-list" aria-live="polite"></div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

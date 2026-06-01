@@ -8,13 +8,22 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <main class="start-page">
-        <div class="start-card">
+        <div class="start-card" id="main">
             <h1>Minecraft Mob Guesser</h1>
             <p class="subtitle">Guess the mob from the picture — how many can you get right?</p>
             <div class="start-actions">
-                <button class="start-button" onclick="goToGame()">Start</button>
-                <button id="colorToggle" class="back-small" onclick="toggleColorBlindMode()">CB Mode</button>
+                <div class="room-controls">
+                    <input id="playerName" placeholder="Your name (optional)" aria-label="Your name">
+                    <input id="roomCode" placeholder="Room code" aria-label="Room code">
+                    <button class="start-button" id="createRoomBtn" onclick="createRoom()">Create Room</button>
+                    <button class="start-button" onclick="joinRoom()">Join Room</button>
+                    <button class="start-button" id="openRoomBtn" onclick="openRoom()" style="display:none">Open Room</button>
+                    <button class="start-button" id="copyRoomBtn" onclick="copyRoomCode()" style="display:none">Copy Code</button>
+                    <div id="generatedRoom" style="margin-top:6px;display:none">Room code: <span id="roomDisplay"></span></div>
+                </div>
+                <button id="colorToggle" type="button" class="back-small" onclick="toggleColorBlindMode()" aria-pressed="false" aria-label="Toggle color blind mode">CB Mode</button>
             </div>
         </div>
     </main>

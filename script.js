@@ -6,6 +6,111 @@ function goHome() {
     window.location.href = 'index.html';
 }
 
+// --- Multiplayer room helpers (start screen) ---
+function createRoom() {
+    // generate a short human-friendly room code and show it on the Start screen
+    const code = Math.random().toString(36).slice(2, 8).toUpperCase();
+    const roomInput = document.getElementById('roomCode');
+    if (roomInput) roomInput.value = code;
+    const display = document.getElementById('roomDisplay');
+    const gen = document.getElementById('generatedRoom');
+    const openBtn = document.getElementById('openRoomBtn');
+    const copyBtn = document.getElementById('copyRoomBtn');
+    if (display) display.textContent = code;
+    if (gen) gen.style.display = 'block';
+    if (openBtn) openBtn.style.display = 'inline-block';
+    if (copyBtn) copyBtn.style.display = 'inline-block';
+}
+
+function openRoom() {
+    const room = document.getElementById('roomCode') ? document.getElementById('roomCode').value.trim().toUpperCase() : '';
+    const name = document.getElementById('playerName') ? document.getElementById('playerName').value.trim() : '';
+    if (!room) {
+        alert('No room code found. Create a room first.');
+        return;
+    }
+    window.location.href = `game.html?room=${encodeURIComponent(room)}&name=${encodeURIComponent(name)}`;
+}
+
+function copyRoomCode() {
+    const room = document.getElementById('roomCode') ? document.getElementById('roomCode').value.trim().toUpperCase() : '';
+    if (!room) return;
+    navigator.clipboard.writeText(room).then(() => {
+        const btn = document.getElementById('copyRoomBtn');
+        if (btn) {
+            const old = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = old, 1500);
+        }
+    }).catch(() => alert('Copy failed — select and copy manually.'));
+}
+
+function joinRoom() {
+    const room = document.getElementById('roomCode') ? document.getElementById('roomCode').value.trim().toUpperCase() : '';
+    const name = document.getElementById('playerName') ? document.getElementById('playerName').value.trim() : '';
+    if (!room) {
+        alert('Enter a room code to join.');
+        return;
+    }
+    window.location.href = `game.html?room=${encodeURIComponent(room)}&name=${encodeURIComponent(name)}`;
+}
+
+function getQueryParams() {
+    const qp = {};
+    location.search.slice(1).split('&').forEach(pair => {
+        if (!pair) return;
+        const [k, v] = pair.split('=');
+        qp[decodeURIComponent(k)] = decodeURIComponent(v || '');
+    });
+    return qp;
+}
+
+let socket = null;
+let roomCode = null;
+let playerName = null;
+
+function connectToRoomIfNeeded() {
+    const params = getQueryParams();
+    if (!params.room) return;
+    roomCode = params.room.toUpperCase();
+    playerName = params.name || (`P${Math.floor(Math.random()*9000)+1000}`);
+    if (typeof io === 'undefined') return;
+    socket = io();
+    socket.on('connect', () => {
+        const s = document.getElementById('mpStatus');
+        if (s) s.textContent = `Multiplayer: connected (${roomCode})`;
+        socket.emit('join', { name: playerName, room: roomCode });
+    });
+    socket.on('roomState', ({ players, mobIndex }) => {
+        renderPlayers(players);
+        if (typeof mobIndex !== 'undefined') {
+            const idx = mobIndex % mobs.length;
+            loadMobByIndex(idx);
+        }
+    });
+    socket.on('newMob', ({ mobIndex }) => {
+        const idx = mobIndex % mobs.length;
+        loadMobByIndex(idx);
+    });
+    socket.on('disconnect', () => {
+        const s = document.getElementById('mpStatus');
+        if (s) s.textContent = 'Multiplayer: disconnected';
+    });
+}
+
+function renderPlayers(players) {
+    const el = document.getElementById('playersList');
+    if (!el) return;
+    el.innerHTML = '<strong>Players</strong>';
+    const ul = document.createElement('ul');
+    players.forEach(p => {
+        const li = document.createElement('li');
+        li.textContent = `${p.name} — Score: ${p.score} Wrong: ${p.wrongCount}`;
+        ul.appendChild(li);
+    });
+    el.appendChild(ul);
+}
+
 const mobs = [
     {
         name: 'creeper',
@@ -97,27 +202,73 @@ function initGame() {
 }
 
 function loadNewMob() {
+    // In single-player/local mode pick a random mob. In multiplayer the server will call loadMobByIndex.
     currentMobIndex = Math.floor(Math.random() * mobs.length);
     currentMob = mobs[currentMobIndex];
     answered = false;
     
-    document.getElementById('mobImage').src = currentMob.image;
-    document.getElementById('feedback').textContent = '';
-    document.getElementById('feedback').className = 'feedback';
+    const img = document.getElementById('mobImage');
+    img.src = currentMob.image;
+    img.alt = `Picture of ${currentMob.name}`;
+    img.setAttribute('aria-label', `Picture of ${currentMob.name}`);
+
+    const feedbackEl = document.getElementById('feedback');
+    if (feedbackEl) {
+        feedbackEl.textContent = '';
+        feedbackEl.className = 'feedback';
+    }
+
     // special styling for the custom mob d3rlord3
     const mobDisplayEl = document.querySelector('.mob-display');
     if (mobDisplayEl) mobDisplayEl.classList.remove('d3r');
     if (currentMob.name === 'd3rlord3') {
         if (mobDisplayEl) mobDisplayEl.classList.add('d3r');
-        const fb = document.getElementById('feedback');
-        if (fb) {
-            fb.textContent = 'Whatever you do at the cross roads dont turn left';
-            fb.className = 'feedback d3r';
+        if (feedbackEl) {
+            feedbackEl.textContent = 'Whatever you do at the cross roads dont turn left';
+            feedbackEl.className = 'feedback d3r';
         }
     }
     document.getElementById('nextButton').style.display = 'none';
     
     generateOptions();
+    // focus first option for keyboard/screen-reader users
+    setTimeout(() => {
+        const first = document.querySelector('.option-button');
+        if (first) first.focus();
+    }, 50);
+}
+
+function loadMobByIndex(idx) {
+    currentMobIndex = idx;
+    currentMob = mobs[currentMobIndex];
+    answered = false;
+
+    const img = document.getElementById('mobImage');
+    img.src = currentMob.image;
+    img.alt = `Picture of ${currentMob.name}`;
+    img.setAttribute('aria-label', `Picture of ${currentMob.name}`);
+
+    const feedbackEl = document.getElementById('feedback');
+    if (feedbackEl) {
+        feedbackEl.textContent = '';
+        feedbackEl.className = 'feedback';
+    }
+
+    const mobDisplayEl = document.querySelector('.mob-display');
+    if (mobDisplayEl) mobDisplayEl.classList.remove('d3r');
+    if (currentMob.name === 'd3rlord3') {
+        if (mobDisplayEl) mobDisplayEl.classList.add('d3r');
+        if (feedbackEl) {
+            feedbackEl.textContent = 'Whatever you do at the cross roads dont turn left';
+            feedbackEl.className = 'feedback d3r';
+        }
+    }
+    document.getElementById('nextButton').style.display = 'none';
+    generateOptions();
+    setTimeout(() => {
+        const first = document.querySelector('.option-button');
+        if (first) first.focus();
+    }, 50);
 }
 
 function generateOptions() {
@@ -145,6 +296,8 @@ function generateOptions() {
     buttons.forEach((button, index) => {
         button.textContent = options[index].name.charAt(0).toUpperCase() + options[index].name.slice(1);
         button.dataset.mob = options[index].name;
+        button.type = 'button';
+        button.setAttribute('aria-label', `Answer: ${options[index].name}`);
         button.disabled = false;
         button.classList.remove('correct', 'incorrect');
     });
@@ -172,6 +325,8 @@ function guessOption(button) {
             document.body.classList.add('d3r-mode');
             setTimeout(() => document.body.classList.remove('d3r-mode'), 2600);
         }
+        button.setAttribute('aria-pressed', 'true');
+        if (socket) socket.emit('guess', { correct: true });
     } else {
         wrongCount++;
         const wcEl = document.getElementById('wrongCount');
@@ -186,8 +341,11 @@ function guessOption(button) {
                 btn.classList.add('correct');
             }
             btn.disabled = true;
+            btn.setAttribute('aria-pressed', 'false');
         });
         
+        if (socket) socket.emit('guess', { correct: false });
+
         if (wrongCount >= 3) {
             document.getElementById('nextButton').style.display = 'block';
             document.getElementById('nextButton').textContent = 'Game Over';

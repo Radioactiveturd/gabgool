@@ -210,6 +210,16 @@ body {
 .site-header .container{ max-width:980px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; }
 .site-title{ font-family:'Press Start 2P',monospace; font-size:14px; color:var(--accent); }
 .back-small{ background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--muted); padding:8px 12px; border-radius:8px; }
+.skip-link{ position:absolute; left:-999px; top:auto; width:1px; height:1px; overflow:hidden; }
+.skip-link:focus{ left:12px; top:12px; width:auto; height:auto; background:rgba(0,0,0,0.6); color:#fff; padding:8px 12px; border-radius:6px; z-index:60; }
+.header-controls{ display:flex; gap:8px; align-items:center; }
+
+/* focus-visible improvements for keyboard users */
+:focus{ outline: none; }
+.option-button:focus, .start-button:focus, .back-small:focus, .next-button:focus{
+    outline: 3px solid rgba(255,255,255,0.12);
+    outline-offset: 4px;
+}
 
 .header-controls{ display:flex; gap:8px; align-items:center; }
 
