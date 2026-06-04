@@ -34,14 +34,27 @@
                 <button type="button" class="option-button" onclick="guessOption(this)"></button>
                 <button type="button" class="option-button" onclick="guessOption(this)"></button>
                 <button type="button" class="option-button" onclick="guessOption(this)"></button>
+                <button type="button" class="option-button" id="secretBtn" onclick="guessOption(this)" style="display:none;"></button>
             </div>
             <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
             <button type="button" class="next-button" id="nextButton" onclick="nextMob()" style="display: none;" aria-label="Next mob">Next Mob</button>
         </div>
     </main>
-    <div class="multiplayer-panel">
-        <div id="mpStatus">Multiplayer: not connected</div>
-        <div id="playersList" class="players-list" aria-live="polite"></div>
+    <div class="side-panels">
+        <div class="multiplayer-panel">
+            <div id="mpStatus">Multiplayer: not connected</div>
+            <div id="playersList" class="players-list" aria-live="polite"></div>
+        </div>
+        <div class="slot-machine-panel">
+            <div class="slot-header">Slot Machine</div>
+            <div class="slot-reels">
+                <div class="reel" id="reel1">🎰</div>
+                <div class="reel" id="reel2">🎰</div>
+                <div class="reel" id="reel3">🎰</div>
+            </div>
+            <button type="button" class="slot-button" id="spinBtn" onclick="spinSlots()">SPIN!</button>
+            <div id="slotMessage" class="slot-message"></div>
+        </div>
     </div>
     <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>

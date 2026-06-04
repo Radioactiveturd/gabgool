@@ -17,10 +17,10 @@
                 <div class="room-controls">
                     <input id="playerName" placeholder="Your name (optional)" aria-label="Your name">
                     <input id="roomCode" placeholder="Room code" aria-label="Room code">
-                    <button class="start-button" id="createRoomBtn" onclick="createRoom()">Create Room</button>
-                    <button class="start-button" onclick="joinRoom()">Join Room</button>
-                    <button class="start-button" id="openRoomBtn" onclick="openRoom()" style="display:none">Open Room</button>
-                    <button class="start-button" id="copyRoomBtn" onclick="copyRoomCode()" style="display:none">Copy Code</button>
+                    <button type="button" class="start-button" id="createRoomBtn" onclick="createRoom()">Create Room</button>
+                    <button type="button" class="start-button" onclick="joinRoom()">Join Room</button>
+                    <button type="button" class="start-button" id="openRoomBtn" onclick="openRoom()" style="display:none">Open Room</button>
+                    <button type="button" class="start-button" id="copyRoomBtn" onclick="copyRoomCode()" style="display:none">Copy Code</button>
                     <div id="generatedRoom" style="margin-top:6px;display:none">Room code: <span id="roomDisplay"></span></div>
                 </div>
                 <button id="colorToggle" type="button" class="back-small" onclick="toggleColorBlindMode()" aria-pressed="false" aria-label="Toggle color blind mode">CB Mode</button>

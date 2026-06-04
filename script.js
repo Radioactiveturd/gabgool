@@ -20,6 +20,9 @@ function createRoom() {
     if (gen) gen.style.display = 'block';
     if (openBtn) openBtn.style.display = 'inline-block';
     if (copyBtn) copyBtn.style.display = 'inline-block';
+    // immediately open the new room so the creator joins and can share the code
+    const name = document.getElementById('playerName') ? document.getElementById('playerName').value.trim() : '';
+    window.location.href = `game.html?room=${encodeURIComponent(code)}&name=${encodeURIComponent(name)}`;
 }
 
 function openRoom() {
@@ -177,12 +180,12 @@ const mobs = [
         name: 'fox',
         image: 'https://minecraft.wiki/images/Fox_face.png'
     }
-    ,
-    {
-        name: 'd3rlord3',
-        image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQBq6_yqw9Fb6r3-dz3DB1fzruESVtepQJPgQ&s'
-    }
 ];
+
+const d3rlord3Mob = {
+    name: 'd3rlord3',
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQBq6_yqw9Fb6r3-dz3DB1fzruESVtepQJPgQ&s'
+};
 
 let currentMobIndex = 0;
 let score = 0;
@@ -190,6 +193,76 @@ let questionsAsked = 0;
 let wrongCount = 0;
 let currentMob = null;
 let answered = false;
+let d3rlordModalActive = false;
+let isSpinning = false;
+
+const slotSymbols = ['🍀', '💎', '🔥', '⭐', '👑'];
+
+function spinSlots() {
+    if (isSpinning) return;
+    
+    // Cost 1 point to spin
+    if (score < 1) {
+        const msg = document.getElementById('slotMessage');
+        if (msg) {
+            msg.textContent = 'Not enough points!';
+            msg.className = 'slot-message nomatch';
+        }
+        return;
+    }
+    
+    score -= 1;
+    document.getElementById('score').textContent = score;
+    
+    isSpinning = true;
+    const spinBtn = document.getElementById('spinBtn');
+    const msg = document.getElementById('slotMessage');
+    if (spinBtn) spinBtn.disabled = true;
+    if (msg) msg.textContent = 'Spinning...';
+    
+    const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
+    const results = [0, 0, 0];
+    let spins = 0;
+    const maxSpins = 20;
+    
+    const spinInterval = setInterval(() => {
+        spins++;
+        reels.forEach((reel, idx) => {
+            results[idx] = Math.floor(Math.random() * slotSymbols.length);
+            if (reel) reel.textContent = slotSymbols[results[idx]];
+        });
+        
+        if (spins >= maxSpins) {
+            clearInterval(spinInterval);
+            isSpinning = false;
+            if (spinBtn) spinBtn.disabled = false;
+            
+            // Check if all three reels match
+            if (results[0] === results[1] && results[1] === results[2]) {
+                const bonus = (results[0] + 1) * 10; // 10-50 bonus points
+                score += bonus;
+                document.getElementById('score').textContent = score;
+                if (msg) {
+                    msg.textContent = `🎉 JACKPOT! +${bonus} points!`;
+                    msg.className = 'slot-message jackpot';
+                }
+            } else if (results[0] === results[1] || results[1] === results[2] || results[0] === results[2]) {
+                const bonus = 5; // 5 bonus points for two matching
+                score += bonus;
+                document.getElementById('score').textContent = score;
+                if (msg) {
+                    msg.textContent = `Match! +${bonus} points`;
+                    msg.className = 'slot-message match';
+                }
+            } else {
+                if (msg) {
+                    msg.textContent = 'No match';
+                    msg.className = 'slot-message nomatch';
+                }
+            }
+        }
+    }, 50);
+}
 
 function initGame() {
     score = 0;
@@ -218,16 +291,6 @@ function loadNewMob() {
         feedbackEl.className = 'feedback';
     }
 
-    // special styling for the custom mob d3rlord3
-    const mobDisplayEl = document.querySelector('.mob-display');
-    if (mobDisplayEl) mobDisplayEl.classList.remove('d3r');
-    if (currentMob.name === 'd3rlord3') {
-        if (mobDisplayEl) mobDisplayEl.classList.add('d3r');
-        if (feedbackEl) {
-            feedbackEl.textContent = 'Whatever you do at the cross roads dont turn left';
-            feedbackEl.className = 'feedback d3r';
-        }
-    }
     document.getElementById('nextButton').style.display = 'none';
     
     generateOptions();
@@ -256,13 +319,6 @@ function loadMobByIndex(idx) {
 
     const mobDisplayEl = document.querySelector('.mob-display');
     if (mobDisplayEl) mobDisplayEl.classList.remove('d3r');
-    if (currentMob.name === 'd3rlord3') {
-        if (mobDisplayEl) mobDisplayEl.classList.add('d3r');
-        if (feedbackEl) {
-            feedbackEl.textContent = 'Whatever you do at the cross roads dont turn left';
-            feedbackEl.className = 'feedback d3r';
-        }
-    }
     document.getElementById('nextButton').style.display = 'none';
     generateOptions();
     setTimeout(() => {
@@ -273,6 +329,7 @@ function loadMobByIndex(idx) {
 
 function generateOptions() {
     const buttons = document.querySelectorAll('.option-button');
+    const secretBtn = document.getElementById('secretBtn');
     const allMobs = [...mobs];
     
     // Fisher-Yates shuffle
@@ -291,6 +348,19 @@ function generateOptions() {
     for (let i = options.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [options[i], options[j]] = [options[j], options[i]];
+    }
+    
+    // Show secret avery button when slime is the current mob
+    if (currentMob.name === 'slime' && secretBtn) {
+        secretBtn.style.display = 'inline-block';
+        secretBtn.textContent = 'Avery';
+        secretBtn.dataset.mob = 'avery';
+        secretBtn.type = 'button';
+        secretBtn.setAttribute('aria-label', 'Answer: Avery');
+        secretBtn.disabled = false;
+        secretBtn.classList.remove('correct', 'incorrect');
+    } else if (secretBtn) {
+        secretBtn.style.display = 'none';
     }
     
     buttons.forEach((button, index) => {
@@ -312,21 +382,21 @@ function guessOption(button) {
     const guess = button.dataset.mob;
     const feedback = document.getElementById('feedback');
     
-    if (guess === currentMob.name) {
+    // Check if guess is correct (including secret avery answer for slime)
+    const isCorrect = guess === currentMob.name || (guess === 'avery' && currentMob.name === 'slime');
+    
+    if (isCorrect) {
         score++;
         document.getElementById('score').textContent = score;
         feedback.textContent = '✓ Correct!';
         feedback.className = 'feedback correct';
         button.classList.add('correct');
-        // special win message/effect for d3rlord3
-        if (currentMob.name === 'd3rlord3') {
-            feedback.textContent = '✓ You discovered D3RLORD3!';
-            feedback.className = 'feedback d3r correct';
-            document.body.classList.add('d3r-mode');
-            setTimeout(() => document.body.classList.remove('d3r-mode'), 2600);
-        }
         button.setAttribute('aria-pressed', 'true');
         if (socket) socket.emit('guess', { correct: true });
+        // after 4 correct guesses, random chance to trigger d3rlord3 modal
+        if (score > 0 && score % 4 === 0 && Math.random() < 0.3) {
+            setTimeout(showD3rlordModal, 1500);
+        }
     } else {
         wrongCount++;
         const wcEl = document.getElementById('wrongCount');
@@ -393,7 +463,71 @@ function applySavedColorMode() {
     });
 }
 
+function showD3rlordModal() {
+    if (d3rlordModalActive) return;
+    d3rlordModalActive = true;
+    
+    const modal = document.createElement('div');
+    modal.id = 'd3rlord-modal';
+    modal.innerHTML = `
+        <div class="d3r-modal-overlay">
+            <div class="d3r-modal-content">
+                <div class="d3r-modal-header">WARNING: RARE ENCOUNTER!</div>
+                <img src="${d3rlord3Mob.image}" alt="d3rlord3" class="d3r-modal-image">
+                <div class="d3r-modal-question">What is this creature?</div>
+                <div class="d3r-modal-options">
+                    <button type="button" class="d3r-option" onclick="guessD3rlord('d3rlord3')">d3rlord3</button>
+                    <button type="button" class="d3r-option" onclick="guessD3rlord('creeper')">Creeper</button>
+                    <button type="button" class="d3r-option" onclick="guessD3rlord('enderman')">Enderman</button>
+                    <button type="button" class="d3r-option" onclick="guessD3rlord('warden')">Warden</button>
+                </div>
+                <div id="d3r-feedback"></div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function guessD3rlord(guess) {
+    const feedback = document.getElementById('d3r-feedback');
+    const modal = document.getElementById('d3rlord-modal');
+    const options = document.querySelectorAll('.d3r-option');
+    options.forEach(btn => btn.disabled = true);
+    
+    if (guess === d3rlord3Mob.name) {
+        score++;
+        document.getElementById('score').textContent = score;
+        feedback.textContent = '✓ You discovered D3RLORD3!';
+        feedback.className = 'd3r-correct';
+        document.body.classList.add('d3r-mode');
+        if (socket) socket.emit('guess', { correct: true });
+        setTimeout(() => {
+            document.body.classList.remove('d3r-mode');
+            modal.remove();
+            d3rlordModalActive = false;
+            nextMob();
+        }, 2600);
+    } else {
+        wrongCount++;
+        const wcEl = document.getElementById('wrongCount');
+        if (wcEl) wcEl.textContent = wrongCount;
+        feedback.textContent = '✗ Wrong! It was d3rlord3.';
+        feedback.className = 'd3r-incorrect';
+        if (socket) socket.emit('guess', { correct: false });
+        setTimeout(() => {
+            modal.remove();
+            d3rlordModalActive = false;
+            if (wrongCount >= 3) {
+                endGame();
+            } else {
+                nextMob();
+            }
+        }, 1500);
+    }
+}
+
 window.addEventListener('load', () => {
     applySavedColorMode();
     initGame();
+    connectToRoomIfNeeded();
 });
